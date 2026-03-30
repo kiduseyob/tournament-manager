@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <h2>Live Leaderboard</h2>
+
+    <!-- ── Export Toolbar ─────────────────────────────────────────────────── -->
+    <div class="export-toolbar">
+        <span class="export-label">📤 Export:</span>
+        <button class="btn-export btn-pdf" onclick="exportPDF()">📄 PDF</button>
+        <button class="btn-export btn-word" onclick="exportWord()">📝 Word</button>
+        <a class="btn-export btn-csv" href="{{ url_for('export_csv') }}">📊 CSV / Excel</a>
+    </div>
+
+    <!-- ── Leaderboard Table ───────────────────────────────────────────────── -->
+    <div class="table-wrapper">
+        <table id="leaderboard-table">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Participant</th>
+                    <th>Type</th>
+                    <th>Entry Option</th>
+                    <th>Total Points</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in participants %}
+                <tr>
+                    <td class="{% if p.display_rank == 1 %}rank-1{% elif p.display_rank == 2 %}rank-2{% elif p.display_rank == 3 %}rank-3{% endif %}">
+                        #{{ p.display_rank }}
+                    </td>
+                    <td style="font-weight: 500;">{{ p.name }}</td>
+                    <td>{{ p.type|title }}</td>
+                    <td>{{ p.entry|title }}</td>
+                    <td style="font-weight: bold; color: #d4af37;">{{ p.score }} pts</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" style="text-align: center; color: var(--text-muted);">No participants have
+                        registered yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ── Reset Tournament Data ──────────────────────────────────────────── -->
+    <form method="POST" action="{{ url_for('reset_data') }}"
+          onsubmit="return confirm('⚠️ This will permanently delete ALL participants and scores. Are you sure?');">
+        <input type="hidden" name="next" value="leaderboard">
+        <button type="submit" class="btn-reset-danger" style="margin-top: 1.5rem;">🗑️ Reset All Tournament Data</button>
+    </form>
+</div>
+
+<!-- ── jsPDF CDN ──────────────────────────────────────────────────────────── -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+<script>
+/* ── Helpers ───────────────────────────────────────────────────────────── */
+function getTableData() {
+    const rows = [];
+    document.querySelectorAll('#leaderboard-table tbody tr').forEach(tr => {
+        const cells = tr.querySelectorAll('td');
+        if (cells.length < 5) return;   // skip "no participants" row
+        rows.push([
+            cells[0].textContent.trim(),
+            cells[1].textContent.trim(),
+            cells[2].textContent.trim(),
+            cells[3].textContent.trim(),
+            cells[4].textContent.trim(),
+        ]);
+    });
+    return rows;
+}
+
+/* ── PDF Export (jsPDF + AutoTable) ────────────────────────────────────── */
+function exportPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+
+    // Title
+    doc.setFontSize(20);
+    doc.setTextColor(212, 175, 55);          // gold
+    doc.text('🏆 Tournament Leaderboard', 40, 48);
+
+    // Timestamp
+    doc.setFontSize(10);
+    doc.setTextColor(160, 170, 178);
+    doc.text('Exported: ' + new Date().toLocaleString(), 40, 66);
+
+    // Table
+    doc.autoTable({
+        startY: 80,
+        head: [['Rank', 'Participant', 'Type', 'Entry Option', 'Total Points']],
+        body: getTableData(),
+        styles: { fontSize: 11, cellPadding: 8 },
+        headStyles: { fillColor: [13, 16, 19], textColor: [212, 175, 55], fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [30, 35, 40] },
+        bodyStyles: { fillColor: [18, 21, 25], textColor: [240, 240, 240] },
+        columnStyles: { 4: { fontStyle: 'bold', textColor: [212, 175, 55] } },
+    });
+
+    doc.save('tournament_leaderboard.pdf');
+}
+
+/* ── Word Export (HTML → .doc blob) ────────────────────────────────────── */
+function exportWord() {
+    const rows = getTableData();
+    const rankColors = { '#1': '#FFD700', '#2': '#C0C0C0', '#3': '#CD7F32' };
+
+    let tableRows = rows.map(r => {
+        const rankColor = rankColors[r[0]] || '#F0F0F0';
+        return `<tr>
+            <td style="color:${rankColor};font-weight:bold;padding:8px 12px;border:1px solid #2a3138;">${r[0]}</td>
+            <td style="font-weight:500;padding:8px 12px;border:1px solid #2a3138;">${r[1]}</td>
+            <td style="padding:8px 12px;border:1px solid #2a3138;">${r[2]}</td>
+            <td style="padding:8px 12px;border:1px solid #2a3138;">${r[3]}</td>
+            <td style="font-weight:bold;color:#d4af37;padding:8px 12px;border:1px solid #2a3138;">${r[4]}</td>
+        </tr>`;
+    }).join('');
+
+    if (!tableRows) tableRows = `<tr><td colspan="5" style="text-align:center;padding:12px;">No participants registered yet.</td></tr>`;
+
+    const html = `
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+      xmlns:w="urn:schemas-microsoft-com:office:word"
+      xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+  <meta charset="utf-8">
+  <title>Tournament Leaderboard</title>
+  <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]-->
+  <style>
+    body { font-family: Calibri, Arial, sans-serif; margin: 40px; color: #1a1f24; }
+    h1   { color: #b8860b; font-size: 24pt; margin-bottom: 4px; }
+    p    { color: #666; font-size: 10pt; margin-top: 0; }
+    table{ border-collapse: collapse; width: 100%; margin-top: 16px; }
+    th   { background: #1a1f24; color: #d4af37; font-weight: bold; padding: 10px 12px;
+           border: 1px solid #2a3138; font-size: 11pt; }
+  </style>
+</head>
+<body>
+  <h1>🏆 Tournament Leaderboard</h1>
+  <p>Exported on ${new Date().toLocaleString()}</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Rank</th><th>Participant</th><th>Type</th><th>Entry Option</th><th>Total Points</th>
+      </tr>
+    </thead>
+    <tbody>${tableRows}</tbody>
+  </table>
+</body>
+</html>`;
+
+    const blob = new Blob([html], { type: 'application/msword' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = 'tournament_leaderboard.doc';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+</script>
+{% endblock %}

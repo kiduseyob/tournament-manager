@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <h2>Register Participant</h2>
+    <form method="POST" action="{{ url_for('register') }}">
+        <div class="form-group">
+            <label for="name">Participant Name / Team Name</label>
+            <input type="text" id="name" name="name" required placeholder="Enter name here...">
+            <small style="color: var(--text-muted);">Teams implicitly represent 5 members per tournament
+                regulations.</small>
+        </div>
+
+        <div class="form-group">
+            <label for="type">Registration Type</label>
+            <select id="type" name="type" required>
+                <option value="individual">Individual Competitor (Cap: 20)</option>
+                <option value="team">Team of 5 (Cap: 4)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="entry">Event Entry Type</label>
+            <select id="entry" name="entry" required onchange="toggleAssignedEvent(this.value)">
+                <option value="single">Single Event Entry</option>
+                <option value="all">All Events (5 Total)</option>
+            </select>
+        </div>
+
+        <!-- Shown only when "Single Event" is selected -->
+        <div class="form-group" id="assigned-event-group">
+            <label for="assigned_event">Assigned Event</label>
+            <select id="assigned_event" name="assigned_event">
+                <option value="">-- Select Event --</option>
+                {% for event_id, event_name in events.items() %}
+                <option value="{{ event_id }}">{{ event_name }}</option>
+                {% endfor %}
+            </select>
+            <small style="color: var(--text-muted);">This participant may only have scores recorded for this event.</small>
+        </div>
+
+        <div class="btn-row">
+            <button type="submit">Complete Registration</button>
+            <button type="reset" class="btn-reset" onclick="toggleAssignedEvent(document.getElementById('entry').value)">↺ Reset</button>
+        </div>
+    </form>
+</div>
+
+<script>
+function toggleAssignedEvent(entryVal) {
+    const group    = document.getElementById('assigned-event-group');
+    const select   = document.getElementById('assigned_event');
+    const isVisible = entryVal === 'single';
+    group.style.display  = isVisible ? 'flex' : 'none';
+    select.required      = isVisible;
+    if (!isVisible) select.value = '';
+}
+// Run on page load to respect default selection
+toggleAssignedEvent(document.getElementById('entry').value);
+</script>
+{% endblock %}

@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <h2>Record Event Scores</h2>
+    <form method="POST" action="{{ url_for('record_scores') }}">
+
+        <div class="form-group">
+            <label for="participant_id">Select Participant</label>
+            <select id="participant_id" name="participant_id" required onchange="updateEventDropdown(this)">
+                <option value="">-- Choose Participant --</option>
+                {% for p in participants %}
+                <option value="{{ p.id }}"
+                        data-entry="{{ p.entry }}"
+                        data-assigned="{{ p.assigned_event or '' }}"
+                        data-total="{{ p.total }}">
+                    {{ p.name }} ({{ p.type|title }}) — {{ p.entry|title }}
+                    {% if p.entry == 'single' %} · {{ events.get(p.assigned_event, p.assigned_event) }}{% endif %}
+                    · {{ p.total }} pts
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="event_id">Select Event</label>
+            <select id="event_id" name="event_id" required>
+                <option value="">-- Select Participant First --</option>
+                {% for event_id, event_name in events.items() %}
+                <option value="{{ event_id }}">{{ event_name }}</option>
+                {% endfor %}
+            </select>
+            <small id="event-hint" style="color: var(--text-muted); margin-top: 4px; display:none;"></small>
+        </div>
+
+        <div class="form-group">
+            <label for="rank">Placement / Rank</label>
+            <select id="rank" name="rank" required>
+                <option value="1">1st Place (10 pts)</option>
+                <option value="2">2nd Place (8 pts)</option>
+                <option value="3">3rd Place (6 pts)</option>
+                <option value="4">4th Place (4 pts)</option>
+                <option value="5">5th Place or Lower (2 pts)</option>
+            </select>
+            <small style="color: var(--text-muted); margin-top: 4px;">Points are automatically calculated upon
+                submission per official rules.</small>
+        </div>
+
+        <div class="btn-row">
+            <button type="submit">Submit Score</button>
+            <button type="reset" class="btn-reset" onclick="resetEventDropdown()">↺ Reset</button>
+        </div>
+    </form>
+</div>
+
+<script>
+const allEvents = {
+    {% for event_id, event_name in events.items() %}
+    "{{ event_id }}": "{{ event_name }}",
+    {% endfor %}
+};
+
+function buildOptions(allowedKeys) {
+    const sel  = document.getElementById('event_id');
+    const hint = document.getElementById('event-hint');
+    sel.innerHTML = '';
+
+    allowedKeys.forEach(key => {
+        const opt   = document.createElement('option');
+        opt.value   = key;
+        opt.textContent = allEvents[key];
+        sel.appendChild(opt);
+    });
+}
+
+function updateEventDropdown(participantSel) {
+    const chosen  = participantSel.options[participantSel.selectedIndex];
+    const hint    = document.getElementById('event-hint');
+
+    if (!chosen || !chosen.value) {
+        resetEventDropdown();
+        return;
+    }
+
+    const entry    = chosen.dataset.entry;
+    const assigned = chosen.dataset.assigned;
+
+    if (entry === 'single' && assigned) {
+        // Lock to assigned event only
+        buildOptions([assigned]);
+        hint.textContent = `⚠️ Single Event participant — locked to ${allEvents[assigned]} only.`;
+        hint.style.display = 'block';
+    } else {
+        // All events available
+        buildOptions(Object.keys(allEvents));
+        hint.textContent = '✅ All Events participant — any event can be selected.';
+        hint.style.display = 'block';
+    }
+}
+
+function resetEventDropdown() {
+    const sel  = document.getElementById('event_id');
+    const hint = document.getElementById('event-hint');
+    sel.innerHTML = '<option value="">-- Select Participant First --</option>';
+    {% for event_id, event_name in events.items() %}
+    sel.add(new Option("{{ event_name }}", "{{ event_id }}"));
+    {% endfor %}
+    hint.style.display = 'none';
+}
+</script>
+{% endblock %}

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>VS Code Terminal - Flask Running</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1e1e1e; font-family: 'Consolas', 'Courier New', monospace; font-size: 13.5px; color: #d4d4d4; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+  .title-bar { background: #323233; height: 30px; display: flex; align-items: center; padding: 0 10px; gap: 6px; }
+  .traffic { width: 12px; height: 12px; border-radius: 50%; }
+  .red { background: #ff5f57; } .yellow { background: #ffbd2e; } .green { background: #28c840; }
+  .title-text { flex: 1; text-align: center; font-size: 12px; color: #cccccc; }
+  .title-text span { color: #888; }
+  .menu-bar { background: #3c3c3c; height: 25px; display: flex; align-items: center; padding: 0 8px; gap: 2px; }
+  .menu-bar span { font-size: 12px; color: #ccc; padding: 2px 8px; border-radius: 3px; }
+  .tab-bar { background: #252526; height: 35px; display: flex; align-items: flex-end; border-bottom: 1px solid #1e1e1e; }
+  .tab { background: #1e1e1e; padding: 0 16px; height: 35px; display: flex; align-items: center; gap: 6px; font-size: 13px; color: #ffffff; border-top: 2px solid #007acc; border-right: 1px solid #252526; }
+  .inactive-tab { background: #2d2d2d; padding: 0 16px; height: 35px; display: flex; align-items: center; gap: 6px; font-size: 13px; color: #888; border-right: 1px solid #1e1e1e; }
+  .main { display: flex; flex: 1; overflow: hidden; }
+  .sidebar { width: 48px; background: #333333; display: flex; flex-direction: column; align-items: center; padding-top: 8px; gap: 4px; }
+  .sidebar-icon { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; color: #858585; font-size: 18px; }
+  .sidebar-icon.active { color: #ffffff; }
+  .content-area { flex: 1; display: flex; flex-direction: column; }
+
+  /* Code editor (collapsed/small so terminal is main focus) */
+  .code-preview { flex: 1; background: #1e1e1e; padding: 8px 12px; overflow: hidden; opacity: 0.5; font-size: 12px; color: #888; }
+
+  /* Terminal panel */
+  .terminal-panel { height: 55%; border-top: 1px solid #252526; display: flex; flex-direction: column; background: #1e1e1e; }
+  .terminal-header { background: #252526; display: flex; align-items: center; height: 35px; border-bottom: 1px solid #1e1e1e; padding: 0 8px; gap: 4px; }
+  .terminal-tab { padding: 6px 12px; font-size: 12px; color: #fff; cursor: pointer; background: #1e1e1e; border-top: 1px solid #007acc; }
+  .terminal-inactive-tab { padding: 6px 12px; font-size: 12px; color: #888; cursor: pointer; }
+  .terminal-header-right { margin-left: auto; display: flex; gap: 6px; color: #858585; font-size: 14px; }
+  .terminal-body { flex: 1; padding: 10px 14px; overflow-y: auto; line-height: 1.6; font-size: 13px; }
+
+  /* Terminal colors */
+  .t-dim { color: #6a6a6a; }
+  .t-green { color: #23d18b; }
+  .t-yellow { color: #f5f543; }
+  .t-blue { color: #3b8eea; }
+  .t-red { color: #f14c4c; }
+  .t-cyan { color: #29b8db; }
+  .t-white { color: #e5e5e5; }
+  .t-warn { color: #cca700; }
+  .prompt { color: #23d18b; }
+  .cursor { display: inline-block; width: 8px; height: 14px; background: #d4d4d4; vertical-align: middle; animation: blink 1s step-end infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .status-bar { background: #007acc; height: 22px; display: flex; align-items: center; padding: 0 10px; gap: 16px; font-size: 12px; color: #ffffff; }
+  .status-bar .right { margin-left: auto; display: flex; gap: 12px; }
+  .status-icon { display: flex; align-items: center; gap: 4px; }
+</style>
+</head>
+<body>
+<div class="title-bar">
+  <div class="traffic red"></div>
+  <div class="traffic yellow"></div>
+  <div class="traffic green"></div>
+  <div class="title-text">app.py — tournament-manager <span>— Visual Studio Code</span></div>
+</div>
+<div class="menu-bar">
+  <span>File</span><span>Edit</span><span>Selection</span><span>View</span><span>Go</span><span>Run</span><span>Terminal</span><span>Help</span>
+</div>
+<div class="tab-bar">
+  <div class="tab">🐍 app.py <span style="color:#888;font-size:11px;margin-left:4px">✕</span></div>
+  <div class="inactive-tab">data.json &nbsp;<span style="color:#888;font-size:11px">✕</span></div>
+</div>
+<div class="main">
+  <div class="sidebar">
+    <div class="sidebar-icon active">📁</div>
+    <div class="sidebar-icon">🔍</div>
+    <div class="sidebar-icon">⎇</div>
+    <div class="sidebar-icon">🐛</div>
+    <div class="sidebar-icon">🧩</div>
+    <div style="margin-top:auto"></div>
+    <div class="sidebar-icon">⚙️</div>
+  </div>
+  <div class="content-area">
+    <!-- Faint code preview -->
+    <div class="code-preview">
+      <div style="color:#569cd6">if</div> __name__ == <span style="color:#ce9178">'__main__'</span>:<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;app.run(<span style="color:#9cdcfe">debug</span>=<span style="color:#569cd6">True</span>, <span style="color:#9cdcfe">port</span>=<span style="color:#b5cea8">5000</span>)
+    </div>
+
+    <!-- Terminal panel -->
+    <div class="terminal-panel">
+      <div class="terminal-header">
+        <div class="terminal-tab">TERMINAL</div>
+        <div class="terminal-inactive-tab">PROBLEMS</div>
+        <div class="terminal-inactive-tab">OUTPUT</div>
+        <div class="terminal-inactive-tab">DEBUG CONSOLE</div>
+        <div class="terminal-header-right">
+          <span>+</span><span>⌄</span><span>⤢</span><span>✕</span>
+        </div>
+      </div>
+      <div class="terminal-body">
+        <div><span class="prompt">PS</span> <span class="t-blue">C:\Users\Kidus\Desktop\School_coding\tournament-manager</span><span class="t-white">&gt;</span> <span class="t-white">python app.py</span></div>
+        <div>&nbsp;</div>
+        <div><span class="t-dim"> * Serving Flask app '</span><span class="t-cyan">app</span><span class="t-dim">'</span></div>
+        <div><span class="t-dim"> * Debug mode: </span><span class="t-green">on</span></div>
+        <div><span class="t-warn">WARNING: This is a development server. Do not use it in a production deployment.</span></div>
+        <div><span class="t-dim">   Use a production WSGI server instead.</span></div>
+        <div><span class="t-dim"> * Running on </span><span class="t-cyan">http://127.0.0.1:5000</span></div>
+        <div><span class="t-dim"> * Running on </span><span class="t-cyan">http://192.168.1.5:5000</span></div>
+        <div><span class="t-dim">Press </span><span class="t-white">CTRL+C</span><span class="t-dim"> to quit</span></div>
+        <div><span class="t-dim"> * Restarting with stat</span></div>
+        <div><span class="t-warn"> * Debugger is active!</span></div>
+        <div><span class="t-dim"> * Debugger PIN: </span><span class="t-white">142-776-381</span></div>
+        <div>&nbsp;</div>
+        <div><span class="t-dim">127.0.0.1 - - [25/Mar/2026 09:30:12] "</span><span class="t-green">GET / HTTP/1.1</span><span class="t-dim">" 302 -</span></div>
+        <div><span class="t-dim">127.0.0.1 - - [25/Mar/2026 09:30:12] "</span><span class="t-green">GET /login HTTP/1.1</span><span class="t-dim">" 200 -</span></div>
+        <div><span class="t-dim">127.0.0.1 - - [25/Mar/2026 09:30:18] "</span><span class="t-green">POST /login HTTP/1.1</span><span class="t-dim">" 302 -</span></div>
+        <div><span class="t-dim">127.0.0.1 - - [25/Mar/2026 09:30:19] "</span><span class="t-green">GET / HTTP/1.1</span><span class="t-dim">" 200 -</span></div>
+        <div><span class="t-dim">127.0.0.1 - - [25/Mar/2026 09:31:04] "</span><span class="t-green">GET /register HTTP/1.1</span><span class="t-dim">" 200 -</span></div>
+        <div><span class="t-dim">127.0.0.1 - - [25/Mar/2026 09:31:22] "</span><span class="t-green">POST /register HTTP/1.1</span><span class="t-dim">" 302 -</span></div>
+        <div>&nbsp;</div>
+        <div><span class="prompt">PS</span> <span class="t-blue">C:\Users\Kidus\Desktop\School_coding\tournament-manager</span><span class="t-white">&gt;</span> <span class="cursor"></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="status-bar">
+  <div style="display:flex;gap:12px">
+    <div class="status-icon">⎇ main</div>
+    <div class="status-icon">⚠ 0 &nbsp; ⓘ 0</div>
+  </div>
+  <div class="right">
+    <div class="status-icon">🐍 Python 3.10.0</div>
+    <div class="status-icon">UTF-8</div>
+    <div class="status-icon">Flask (port 5000)</div>
+  </div>
+</div>
+</body>
+</html>

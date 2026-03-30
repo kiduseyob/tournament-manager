@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <h2>Welcome to the Tournament Dashboard</h2>
+    <!-- Dashboard Hero Image -->
+    <img src="https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=1000&q=80"
+        alt="College Sports Trophy" class="placeholder-img">
+    <p>Manage college tournament registrations, track team and individual scores, and view the live leaderboard. Select
+        an action from the menu above to get started.</p>
+
+    <div class="dashboard-stats">
+        <div class="stat-box">
+            <h3>Teams Registered</h3>
+            <p class="number">{{ teams_count }} <span style="font-size: 1.2rem; color: #a0aab2; font-weight: normal;">/
+                    4</span></p>
+        </div>
+        <div class="stat-box">
+            <h3>Individuals Registered</h3>
+            <p class="number">{{ individuals_count }} <span
+                    style="font-size: 1.2rem; color: #a0aab2; font-weight: normal;">/ 20</span></p>
+        </div>
+    </div>
+
+    <!-- Reset Tournament Data -->
+    <form method="POST" action="{{ url_for('reset_data') }}"
+          onsubmit="return confirm('⚠️ This will permanently delete ALL participants and scores. Are you sure?');">
+        <input type="hidden" name="next" value="dashboard">
+        <button type="submit" class="btn-reset-danger" style="margin-top: 2rem;">🗑️ Reset All Tournament Data</button>
+    </form>
+</div>
+{% endblock %}

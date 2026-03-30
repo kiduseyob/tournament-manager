@@ -1,0 +1,21 @@
+{
+    "participants": [
+        {
+            "id": 1,
+            "name": "Mitmita",
+            "type": "team",
+            "entry": "all",
+            "assigned_event": null,
+            "event_scores": {
+                "100m_sprint": 0,
+                "800m_run": 0,
+                "shot_put": 0,
+                "long_jump": 0,
+                "spelling_bee": 0,
+                "math_bee": 0,
+                "debate": 0,
+                "science_trivia": 0
+            }
+        }
+    ]
+}
